@@ -6,6 +6,7 @@ import 'package:notify/src/models/addressees.dart';
 import 'package:notify/src/models/error_handler.dart';
 import 'package:notify/src/models/message.dart';
 import 'package:notify/src/services/back4app.dart';
+import 'package:notify/src/services/socketio.dart';
 import 'package:notify/utils/connection_status.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';
 // import 'package:notify/src/services/create_object.dart';
@@ -226,12 +227,15 @@ class RegisterBloc extends ChangeNotifier {
       checkOnNetworkTimeout();
     });
 
+    final ws = SocketIoService(
+        name: registerFormFields.name, msg: _msg, sink: _regFormEventCtrl.sink);
+
     // ! initializing of LocalNotification service
-    var initializationSettingsAdndroid =
+    var initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     var initializationSettingsIOS = IOSInitializationSettings();
     var initializationSettings = InitializationSettings(
-        initializationSettingsAdndroid, initializationSettingsIOS);
+        initializationSettingsAndroid, initializationSettingsIOS);
 
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
     bool res = await flutterLocalNotificationsPlugin.initialize(
@@ -254,16 +258,15 @@ class RegisterBloc extends ChangeNotifier {
       await _initMessageHandler();
       //* built list of contacts
       await _b4a.getAddressees(_addressees);
-      //* subscrive for receiving of new messages
-      await _b4a.initiateLiveQuery(
-          registerFormFields.name, _msg, _regFormEventCtrl.sink,
-          mark: "4");
-      // }
+      //* subscribe for receiving of new messages
+//      await _b4a.initiateLiveQuery(
+//          registerFormFields.name, _msg, _regFormEventCtrl.sink,
+//          mark: "4");
       _inState.add(AppState.authenticated);
     } else {
       if (_b4a.isEda)
         _inState.add(AppState.unknownEDA);
-      //* otherwise go for full blown athentication
+      //* otherwise go for full blown authentication
       else
         _inState.add(AppState.unauthenticated);
     }
@@ -324,7 +327,7 @@ class RegisterBloc extends ChangeNotifier {
   checkOnNetworkTimeout() {
     if (uiState == UIState.loading) {
       _errorHandler.revertEvent = SwitchToSigninEvent();
-      _errorHandler.message = 
+      _errorHandler.message =
           "Network connection to slow or lost, please try again later.";
       _inState.add(AppState.error);
       uiState = UIState.zero;

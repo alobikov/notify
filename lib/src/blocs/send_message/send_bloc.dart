@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:notify/src/services/back4app.dart';
+import 'package:notify/src/services/socketio.dart';
 
 enum FormAction { cancel, submit }
 
 class SendMessageBloc {
   final _b4a = ParseService();
+  final _ws = SocketIoService();
 
 // stream for action and message deliuvery from SendForm to Bloc
   StreamController _formCtrl = StreamController();
@@ -17,7 +19,7 @@ class SendMessageBloc {
   StreamSink<List<String>> get _inMenuList => _menuCtrl.sink;
 
   SendMessageBloc() {
-    // request list of addressees from Back4App and streamout to view for DropDown Menu
+    // request list of addressees from Back4App and stream out to view for DropDown Menu
     _b4a.getAdresats().then((List<String> data) => _inMenuList.add(data));
     _formState.listen(_mapEvents);
   }
@@ -28,8 +30,10 @@ class SendMessageBloc {
       // print('Cancel');
       // event.fun(NavigateToHomeEvent());
     } else if (event.action == FormAction.submit) {
-      _b4a.createMessage(to: event.to, from: event.from, body: event.body);
-      // event.fun(NavigateToHomeEvent()); //! Successfully repalced by Navigator.pop(context) in view
+      _ws.emitMessage(event.body, event.to, event.from);
+//      _b4a.createMessage(to: event.to, from: event.from, body: event.body);
+      // event.fun(NavigateToHomeEvent()); //! Successfully replaced
+      // by Navigator.pop(context) in view
       return;
     }
   }

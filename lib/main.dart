@@ -10,12 +10,11 @@ import 'package:notify/src/ui/widgets/alert.dart';
 import 'package:notify/src/ui/widgets/loading_indicator.dart';
 import 'package:provider/provider.dart';
 
-// const String PARSE_APP_ID = 'iCYTGvNAatQe64smIVqoOidyKKoPx4N0qq3zdH2o';
-// const String PARSE_APP_URL = 'https://parseapi.back4app.com';
-// const String MASTER_KEY = 'lTkaAkYe0jKDFfFEpdWZmgs8jqQwBqwlQyDjKPBS';
-// const String LIVE_QUERY_URL = 'wss://laleks.back4app.io';
+//! version for new backend: node.js, socket.io, mongoDb
+// corresponding backend located at
+// C:\Users\Aleks\development\notify\backend\server
 
-const String CURRENT_RELEASE = 'version 0.2.0';
+const String CURRENT_RELEASE = 'version 1.1.0';
 
 void main() async {
   runApp(
@@ -91,7 +90,7 @@ class MyApp extends StatelessWidget {
                 print(_bloc.uiState);
                 return Signin();
 
-                case AppState.unknownEDA:
+              case AppState.unknownEDA:
                 _bloc.uiState = UIState.introduce;
                 print(_bloc.uiState);
                 return IntroduceYourself();
@@ -148,8 +147,6 @@ class RestartWidget extends StatefulWidget {
   @override
   _RestartWidgetState createState() => _RestartWidgetState();
 }
-
-
 
 class _RestartWidgetState extends State<RestartWidget> {
   Key key = UniqueKey();
