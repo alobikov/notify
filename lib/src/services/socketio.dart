@@ -37,8 +37,8 @@ class SocketIoService {
       print('socket connection error: $e');
     });
     socket.on('message', (msg) {
-      print('Message received1: $msg');
-      print('all messages ${this.msg.messages}');
+      print('Message received: $msg');
+      print('all messages ${this.msg?.messages}');
 //      Map<String, dynamic> m = jsonDecode(msg);
       NotyMessage notyMessage = NotyMessage(
         body: msg['message'],

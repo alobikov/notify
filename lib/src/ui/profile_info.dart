@@ -9,7 +9,10 @@ class ProfileInfo extends StatelessWidget {
         Provider.of<RegisterBloc>(context, listen: false).getFormFields;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        centerTitle: true,
+        title: Text(
+          'Profile',
+        ),
       ),
       body: Container(
           padding: EdgeInsets.all(20.0),
