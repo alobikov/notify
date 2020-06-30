@@ -4,6 +4,7 @@ import 'package:notify/src/models/message.dart';
 import 'package:notify/src/models/self_Config.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+/// singleton
 class SocketIoService {
   IO.Socket socket;
   Messages msg;

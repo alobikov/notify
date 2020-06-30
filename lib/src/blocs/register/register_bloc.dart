@@ -10,6 +10,7 @@ import 'package:notify/src/services/back4app.dart';
 import 'package:notify/src/services/socketio.dart';
 import 'package:notify/utils/connection_status.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:notify/src/services/create_object.dart';
 
 part 'register_event.dart';
@@ -50,7 +51,7 @@ class RegisterBloc extends ChangeNotifier {
   bool showHome = false;
   String emailError;
   bool isOffline = false;
-  final _selfConfig = SelfConfig(
+  final selfConfig = SelfConfig(
       deviceName: "EMULATOR", serverUrl: '192.168.1.61', port: '3000');
 
   StreamSubscription _connectionChangeStream;
@@ -225,15 +226,19 @@ class RegisterBloc extends ChangeNotifier {
   }
 
   initData() async {
-    Future.delayed(Duration(seconds: 12)).then((_) {
-      print('---------------- Network Waiting Timeout -----------------');
-      checkOnNetworkTimeout();
-    });
+    // Future.delayed(Duration(seconds: 12)).then((_) {
+    //   print('---------------- Network Waiting Timeout -----------------');
+    //   checkOnNetworkTimeout();
+    // });
+    final prefs = await SharedPreferences.getInstance();
+    selfConfig
+      ..deviceName = prefs.getString('deviceName') ?? 'EMULATOR'
+      ..serverUrl = prefs.getString('serverUrl') ?? '192.168.1.60'
+      ..port = prefs.getString('port') ?? '3000';
 
     final ws = SocketIoService();
-
     ws.initialize(
-        selfConfig: _selfConfig, msg: _msg, sink: _regFormEventCtrl.sink);
+        selfConfig: selfConfig, msg: _msg, sink: _regFormEventCtrl.sink);
 
     // ! initializing of LocalNotification service
     var initializationSettingsAndroid =
