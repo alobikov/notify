@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notify/src/models/addressees.dart';
 import 'package:notify/src/models/error_handler.dart';
 import 'package:notify/src/models/message.dart';
+import 'package:notify/src/models/self_Config.dart';
 import 'package:notify/src/services/back4app.dart';
 import 'package:notify/src/services/socketio.dart';
 import 'package:notify/utils/connection_status.dart';
@@ -49,6 +50,8 @@ class RegisterBloc extends ChangeNotifier {
   bool showHome = false;
   String emailError;
   bool isOffline = false;
+  final _selfConfig = SelfConfig(
+      deviceName: "EMULATOR", serverUrl: '192.168.1.61', port: '3000');
 
   StreamSubscription _connectionChangeStream;
 
@@ -227,8 +230,10 @@ class RegisterBloc extends ChangeNotifier {
       checkOnNetworkTimeout();
     });
 
-    final ws = SocketIoService(
-        name: registerFormFields.name, msg: _msg, sink: _regFormEventCtrl.sink);
+    final ws = SocketIoService();
+
+    ws.initialize(
+        selfConfig: _selfConfig, msg: _msg, sink: _regFormEventCtrl.sink);
 
     // ! initializing of LocalNotification service
     var initializationSettingsAndroid =

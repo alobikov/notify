@@ -1,36 +1,37 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notify/src/blocs/register/register_bloc.dart';
 import 'package:notify/src/models/message.dart';
+import 'package:notify/src/models/self_Config.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketIoService {
   IO.Socket socket;
-  String name;
   Messages msg;
+  SelfConfig selfConfig;
   StreamSink sink;
 
   static final SocketIoService _singleton = new SocketIoService._internal();
 
-  factory SocketIoService({String name, Messages msg, StreamSink sink}) {
-    _singleton.name = name;
-    _singleton.msg = msg;
-    _singleton.sink = sink;
-
+  factory SocketIoService() {
     return _singleton;
   }
 
-  SocketIoService._internal() {
+  SocketIoService._internal();
+
+  void initialize({SelfConfig selfConfig, Messages msg, StreamSink sink}) {
+    this.selfConfig = selfConfig;
+    this.msg = msg;
+    this.sink = sink;
+
     // init logic goes here
-    print('SocketIoService._internal()'
-        ''
-        ' here!');
-    socket = IO.io('http://192.168.1.61:3000', <String, dynamic>{
+    print('SocketIoService._internal() is here!');
+    socket = IO.io(
+        'http://${selfConfig.serverUrl}:${selfConfig.port}', <String, dynamic>{
       'transports': ['websocket'],
     });
     print(socket.opts);
-    socket.on('connect', (_) => {socket.emit('new-user', 'EDA-EMUL')});
+    socket.on(
+        'connect', (_) => {socket.emit('new-user', selfConfig.deviceName)});
     socket.on('event', (data) => print(data));
     socket.on('disconnect', (_) => print('disconnect'));
     socket.on('connect_error', (e) {
