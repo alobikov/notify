@@ -6,6 +6,8 @@ import 'package:notify/src/models/addressees.dart';
 import 'package:notify/src/models/message.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';
 import 'package:device_info/device_info.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ParseService {
   LiveQuery liveQuery;
@@ -335,19 +337,6 @@ class ParseService {
     print(obj.users);
   }
 
-  Future<List<String>> getAdresats() async {
-    var apiResponse = await ParseObject('Users').getAll();
-    var result = List<String>();
-    if (apiResponse.success && apiResponse.result != null) {
-      for (var user in apiResponse.result) {
-        result.add(jsonDecode(user.toString())['username']);
-      }
-      print(result);
-      return result;
-    }
-    return null; // retrieve failed
-  }
-
   Future readMessages(Messages _msg, String selfuser) async {
     var queryBuilder = QueryBuilder<ParseObject>(ParseObject('Messages'))
       ..whereEqualTo('to', selfuser);
@@ -420,5 +409,38 @@ class ParseService {
   Future unSubscribe(liveQuery) async {
     print('Unsubscribing liveQuery#: ${liveQuery.hashCode}');
     await liveQuery.unSubscribe();
+  }
+
+  Future<List<String>> getAdresat() async {
+    var apiResponse = await ParseObject('Users').getAll();
+    var result = List<String>();
+    if (apiResponse.success && apiResponse.result != null) {
+      for (var user in apiResponse.result) {
+        result.add(jsonDecode(user.toString())['username']);
+      }
+      print(result);
+      return result;
+    }
+    return null; // retrieve failed
+  }
+
+  Future<List<String>> getAdresats() async {
+    final response = await http.get('http://192.168.1.61:3000/users');
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      final result = json.decode(response.body);
+      // final lst = [];
+      // result.forEach((key, value) {
+      //   key == 'deviceId' ? lst.add(value) : null;
+      // });
+      print('Adresatai: ${result[0]['deviceId']}');
+      return [for (var val in result) val['deviceId']];
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
   }
 }
