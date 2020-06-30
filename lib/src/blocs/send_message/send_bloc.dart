@@ -20,7 +20,9 @@ class SendMessageBloc {
 
   SendMessageBloc() {
     // request list of addressees from Back4App and stream out to view for DropDown Menu
-    _b4a.getAdresats().then((List<String> data) => _inMenuList.add(data));
+    _b4a
+        .getAdresats(_ws.url)
+        .then((List<String> data) => _inMenuList.add(data));
     _formState.listen(_mapEvents);
   }
   _mapEvents(event) {

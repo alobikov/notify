@@ -10,6 +10,7 @@ class SocketIoService {
   Messages msg;
   SelfConfig selfConfig;
   StreamSink sink;
+  String url;
 
   static final SocketIoService _singleton = new SocketIoService._internal();
 
@@ -23,11 +24,11 @@ class SocketIoService {
     this.selfConfig = selfConfig;
     this.msg = msg;
     this.sink = sink;
+    this.url = '${selfConfig.serverUrl}:${selfConfig.port}';
 
     // init logic goes here
     print('SocketIoService._internal() is here!');
-    socket = IO.io(
-        'http://${selfConfig.serverUrl}:${selfConfig.port}', <String, dynamic>{
+    socket = IO.io('http://${this.url}', <String, dynamic>{
       'transports': ['websocket'],
     });
     print(socket.opts);

@@ -24,8 +24,8 @@ class _SendFormState extends State<SendForm> {
 
   @override
   Widget build(BuildContext context) {
-    final user =
-        Provider.of<RegisterBloc>(context, listen: false).getFormFields;
+    final deviceId =
+        Provider.of<RegisterBloc>(context, listen: false).selfConfig.deviceName;
     return Scaffold(
       backgroundColor: Colors.teal[100],
       appBar: AppBar(
@@ -95,7 +95,7 @@ class _SendFormState extends State<SendForm> {
                             action: FormAction.submit,
                             body: _text,
                             to: _menuValue,
-                            from: user.name,
+                            from: deviceId,
                           ));
                           Navigator.pop(context);
                         } else

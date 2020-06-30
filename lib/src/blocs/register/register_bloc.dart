@@ -75,7 +75,9 @@ class RegisterBloc extends ChangeNotifier {
 
   StreamController _regFormEventCtrl = StreamController<RegisterEvent>();
   StreamSink<RegisterEvent> get event => _regFormEventCtrl.sink;
+
   RegisterFormFields get getFormFields => registerFormFields;
+  SelfConfig get getSelfConfig => selfConfig;
 
   // ! Register Bloc constructor
   RegisterBloc() : registerFormFields = RegisterFormFields() {

@@ -424,23 +424,20 @@ class ParseService {
     return null; // retrieve failed
   }
 
-  Future<List<String>> getAdresats() async {
-    final response = await http.get('http://192.168.1.61:3000/users');
+  Future<List<String>> getAdresats(String url) async {
+    final response = await http.get('http://$url/users');
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
       final result = json.decode(response.body);
-      // final lst = [];
-      // result.forEach((key, value) {
-      //   key == 'deviceId' ? lst.add(value) : null;
-      // });
-      print('Adresatai: ${result[0]['deviceId']}');
+
+      print('Adresatai: $result');
       return [for (var val in result) val['deviceId']];
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
-      throw Exception('Failed to load album');
+      throw Exception('Failed to load users');
     }
   }
 }
