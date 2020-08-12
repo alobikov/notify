@@ -31,7 +31,7 @@ class SocketIoService {
     socket = IO.io('http://${this.url}', <String, dynamic>{
       'transports': ['websocket'],
     });
-    print(socket.opts);
+    print("Init in socketio.dart: ${socket.opts}");
     socket.on(
         'connect', (_) => {socket.emit('new-user', selfConfig.deviceName)});
     socket.on('event', (data) => print(data));

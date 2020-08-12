@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:notify/src/models/message.dart';
 import 'package:notify/src/services/back4app.dart';
 
@@ -35,6 +36,25 @@ class _MsgListState extends State<MsgList> {
   }
 
   Widget _buildRow(NotyMessage message) {
+    // prepare correct date and time
+    String msgDate, msgTime;
+    final val = int.tryParse(message.timestamp);
+    if (val == null) {
+      // if timestamp not converts to int then check timestamp to be in old style
+      if (message.timestamp.contains(" ")) {
+        // old style timestamp - formated date and time string
+        msgDate = message.timestamp;
+        msgTime = '';
+      } else {
+        msgDate = 'No Date';
+        msgTime = '';
+      }
+    } else {
+      final timeStamp = new DateTime.fromMillisecondsSinceEpoch(val);
+      msgDate = DateFormat('yyyy-MM-dd').format(timeStamp);
+      msgTime = DateFormat.Hm().format(timeStamp);
+    }
+
     return ListTile(
       onLongPress: () async {
         final bool action = await _deleteConfirmAlert(context);
@@ -53,7 +73,7 @@ class _MsgListState extends State<MsgList> {
             children: <Widget>[
               Container(
                 child: Text(
-                  'from: ${message.from}' ?? 'null',
+                  'from: ${message.from}',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
@@ -61,7 +81,7 @@ class _MsgListState extends State<MsgList> {
               Spacer(),
               Container(
                 child: Text(
-                  message.timestamp ?? 'null',
+                  '$msgDate $msgTime',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 // formatDate(message.timestamp, dateformat).toString()),
