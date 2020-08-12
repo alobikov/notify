@@ -5,7 +5,6 @@ import 'package:notify/src/blocs/register/register_bloc.dart';
 import 'package:notify/src/ui/profile_info.dart';
 import 'package:notify/src/ui/settings.dart';
 import 'package:provider/provider.dart';
-import './settings.dart';
 
 class AppDrawer extends StatefulWidget {
   @override
@@ -22,7 +21,7 @@ class _AppDrawerState extends State<AppDrawer> {
         padding: EdgeInsets.zero,
         children: <Widget>[
           Container(
-            height: 120.0,
+            height: 90.0,
             child: DrawerHeader(
               decoration: BoxDecoration(
                 color: Color(0xFF02BB9F),
@@ -41,17 +40,10 @@ class _AppDrawerState extends State<AppDrawer> {
                       //   icon: Icon(Icons.arrow_back),
                       // ),
                       Text(
-                        'Notify settings',
+                        "ID: " + _blocP.getSelfConfig.deviceName ?? "",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 24,
-                        ),
-                      ),
-                      Text(
-                        _blocP.getFormFields.name,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
                         ),
                       ),
                     ],
@@ -78,10 +70,7 @@ class _AppDrawerState extends State<AppDrawer> {
           ),
           ListTile(
             leading: Icon(Icons.settings),
-            title: Text('About'),
-            onTap: () async {
-              _about();
-            },
+            title: Text('Version: ' + CURRENT_RELEASE),
           ),
           ListTile(
             leading: Icon(Icons.arrow_back),
@@ -91,17 +80,8 @@ class _AppDrawerState extends State<AppDrawer> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.person_outline),
-            title: Text('Logout'),
-            onTap: () async {
-              _blocP.event.add(UserLogoutEvent());
-              Navigator.pop(context);
-              // Navigator.popAndPushNamed(context, '/wrapper');
-            },
-          ),
-          ListTile(
             leading: Icon(Icons.clear),
-            title: Text('Exit Notify  *press and hold'),
+            title: Text('Long press for exit'),
             onLongPress: () {
               // RestartWidget.restartApp(context);
               SystemNavigator.pop();

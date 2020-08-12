@@ -11,6 +11,7 @@ import 'package:notify/src/services/socketio.dart';
 import 'package:notify/utils/connection_status.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info/device_info.dart';
 // import 'package:notify/src/services/create_object.dart';
 
 part 'register_event.dart';
@@ -26,6 +27,7 @@ enum AppState {
   loading,
   error,
   reset,
+  firstlaunch,
 }
 enum UIState {
   home,
@@ -34,7 +36,8 @@ enum UIState {
   signin,
   zero,
   alertScreen,
-  introduce
+  introduce,
+  settings,
 }
 
 class RegisterBloc extends ChangeNotifier {
@@ -51,8 +54,8 @@ class RegisterBloc extends ChangeNotifier {
   bool showHome = false;
   String emailError;
   bool isOffline = false;
-  final selfConfig = SelfConfig(
-      deviceName: "EMULATOR", serverUrl: '192.168.1.61', port: '3000');
+  final selfConfig =
+      SelfConfig(deviceName: "EMUL", serverUrl: '192.168.1.61', port: '3000');
 
   StreamSubscription _connectionChangeStream;
 
@@ -228,16 +231,33 @@ class RegisterBloc extends ChangeNotifier {
   }
 
   initData() async {
-    // Future.delayed(Duration(seconds: 12)).then((_) {
-    //   print('---------------- Network Waiting Timeout -----------------');
-    //   checkOnNetworkTimeout();
-    // });
+    // check the hosting device - must be scanner Honeywell
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    print('Running on ${androidInfo.model}');
+    if (androidInfo.model != 'EDA60K') {
+      print("THIS PROGRAM MUST BE RUN ON EDA60K SCANNER");
+      // TODO - route to nohere
+    }
+
+    // is it first launch of application?
     final prefs = await SharedPreferences.getInstance();
+    print('initData() deviceName ${prefs.getString("deviceName")}');
     selfConfig
-      ..deviceName = prefs.getString('deviceName') ?? 'EMULATOR'
+      ..deviceName = prefs.getString('deviceName') ?? 'EMUL'
       ..serverUrl = prefs.getString('serverUrl') ?? '192.168.1.60'
       ..port = prefs.getString('port') ?? '3000';
 
+    if (selfConfig.deviceName == 'EMUL') {
+      _inState.add(AppState.firstlaunch);
+      print("First Launch!!!!!!!!!!!!!!!!!!!!!!!!");
+    } else {
+      _inState.add(AppState.authenticated);
+    }
+    return;
+  }
+
+  initDataContinue() async {
     final ws = SocketIoService();
     ws.initialize(
         selfConfig: selfConfig, msg: _msg, sink: _regFormEventCtrl.sink);
@@ -257,8 +277,12 @@ class RegisterBloc extends ChangeNotifier {
     //! initializing Back4App service
     await Future.delayed(Duration(seconds: 1));
     await _b4a.initParse();
-    // ! initialize connection status watch dog
+
+    // initialize connection status watch dog
+    // external library
+    // used to handle internet connection status change
     connectionStatus.initialize();
+
     //! check for user status on Back4App
     var result = await _b4a.isLogged();
     if (result != null) {
@@ -270,10 +294,7 @@ class RegisterBloc extends ChangeNotifier {
       await _initMessageHandler();
       //* built list of contacts
       await _b4a.getAddressees(_addressees);
-      //* subscribe for receiving of new messages
-//      await _b4a.initiateLiveQuery(
-//          registerFormFields.name, _msg, _regFormEventCtrl.sink,
-//          mark: "4");
+
       _inState.add(AppState.authenticated);
     } else {
       if (_b4a.isEda)

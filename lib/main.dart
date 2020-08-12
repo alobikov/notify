@@ -5,6 +5,7 @@ import 'package:notify/src/models/error_handler.dart';
 import 'package:notify/src/ui/home.dart';
 import 'package:notify/src/ui/introduce_yourself.dart';
 import 'package:notify/src/ui/register.dart';
+import 'package:notify/src/ui/settings.dart';
 import 'package:notify/src/ui/signin.dart';
 import 'package:notify/src/ui/widgets/alert.dart';
 import 'package:notify/src/ui/widgets/loading_indicator.dart';
@@ -14,7 +15,7 @@ import 'package:provider/provider.dart';
 // corresponding backend located at
 // C:\Users\Aleks\development\notify\backend\server
 
-const String CURRENT_RELEASE = 'version 1.1.0';
+const String CURRENT_RELEASE = '1.1.0';
 
 void main() async {
   runApp(
@@ -41,7 +42,7 @@ class _InitAppState extends State<InitApp> {
 
   @override
   dispose() {
-    print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+    print('+++++++++++++++++++++++ dispose +++++++++++++++++++++++++++');
     super.dispose();
   }
 
@@ -57,7 +58,6 @@ class _InitAppState extends State<InitApp> {
 
 class MyApp extends StatelessWidget {
   final _errorHandler = ErrorHandler.instance;
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     // initialization of application made in two step, first one below,
@@ -80,6 +80,11 @@ class MyApp extends StatelessWidget {
           if (snapshot.hasData && snapshot.data != null) {
             print('AppState Snapshot arrived: ${snapshot.data}');
             switch (snapshot.data) {
+              case AppState.firstlaunch:
+                _bloc.uiState = UIState.settings;
+                print(_bloc.uiState);
+                return Settings();
+
               case AppState.authenticated:
                 _bloc.uiState = UIState.home;
                 print(_bloc.uiState);
