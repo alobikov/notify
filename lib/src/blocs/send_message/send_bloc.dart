@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'package:notify/src/services/back4app.dart';
+import 'package:notify/src/services/http_service.dart';
 import 'package:notify/src/services/socketio.dart';
 
 enum FormAction { cancel, submit }
 
 class SendMessageBloc {
-  final _b4a = ParseService();
+  final _http = HttpService();
   final _ws = SocketIoService();
 
 // stream for action and message deliuvery from SendForm to Bloc
@@ -20,22 +20,19 @@ class SendMessageBloc {
 
   SendMessageBloc() {
     // request list of addressees from Back4App and stream out to view for DropDown Menu
-    _b4a
-        .getAdresats(_ws.url)
+    _http
+        .getListOfRecipients(_ws.url)
         .then((List<String> data) => _inMenuList.add(data));
     _formState.listen(_mapEvents);
   }
-  _mapEvents(event) {
+  _mapEvents(event) async {
     print('Event from SendForm');
     print(event.action);
     if (event.action == FormAction.cancel) {
       // print('Cancel');
       // event.fun(NavigateToHomeEvent());
     } else if (event.action == FormAction.submit) {
-      _ws.emitMessage(event.body, event.to, event.from);
-//      _b4a.createMessage(to: event.to, from: event.from, body: event.body);
-      // event.fun(NavigateToHomeEvent()); //! Successfully replaced
-      // by Navigator.pop(context) in view
+      await _http.sendMessage(_ws.url, event.body, event.to, event.from);
       return;
     }
   }

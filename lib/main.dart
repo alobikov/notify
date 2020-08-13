@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:notify/src/blocs/register/register_bloc.dart';
 import 'package:notify/src/blocs/send_message/send_message_form.dart';
 import 'package:notify/src/models/error_handler.dart';
+import 'package:notify/src/services/socketio.dart';
 import 'package:notify/src/ui/home.dart';
-import 'package:notify/src/ui/introduce_yourself.dart';
 import 'package:notify/src/ui/register.dart';
 import 'package:notify/src/ui/settings.dart';
 import 'package:notify/src/ui/signin.dart';
@@ -15,7 +15,7 @@ import 'package:provider/provider.dart';
 // corresponding backend located at
 // C:\Users\Aleks\development\notify\backend\server
 
-const String CURRENT_RELEASE = '1.1.0';
+const String CURRENT_RELEASE = '2.1.1';
 
 void main() async {
   runApp(
@@ -36,8 +36,7 @@ class _InitAppState extends State<InitApp> {
   @mustCallSuper
   void reassemble() async {
     super.reassemble();
-    print('');
-    print('======================== reassemble ==========================');
+    print('=========== reassemble during hot reload ==================');
   }
 
   @override
@@ -95,13 +94,9 @@ class MyApp extends StatelessWidget {
                 print(_bloc.uiState);
                 return Signin();
 
-              case AppState.unknownEDA:
-                _bloc.uiState = UIState.introduce;
-                print(_bloc.uiState);
-                return IntroduceYourself();
-
               case AppState.unregistred:
-                return Register();
+                return Settings();
+
               case AppState.uninitialized:
                 _bloc.uiState = UIState.zero;
                 print(_bloc.uiState);

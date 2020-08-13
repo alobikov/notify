@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:notify/shared/dialogs.dart';
 import 'package:notify/src/blocs/register/register_bloc.dart';
-import 'package:notify/src/services/back4app.dart';
+import 'package:notify/src/services/http_service.dart';
 import 'package:provider/provider.dart';
 
 class RegisterForm extends StatefulWidget {
@@ -15,7 +15,7 @@ class RegisterForm extends StatefulWidget {
 
 class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
-  final _b4a = ParseService();
+  final _b4a = HttpService();
   String _nameError;
 
   @override

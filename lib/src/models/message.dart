@@ -23,7 +23,7 @@ class Messages {
   static final Messages _instance = Messages._privateConstructor();
 
   static Messages get instance => _instance;
-  void deleteMessageLocalyId(id) {
+  void deleteMessageLocallyById(id) {
     messages.removeWhere((item) => id == item.objectId);
   }
 

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:notify/src/blocs/register/register_bloc.dart';
+import 'package:notify/src/models/self_Config.dart';
 import 'package:provider/provider.dart';
 
 class ProfileInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final user =
-        Provider.of<RegisterBloc>(context, listen: false).getFormFields;
+    final SelfConfig user =
+        Provider.of<RegisterBloc>(context, listen: false).getSelfConfig;
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -20,12 +21,11 @@ class ProfileInfo extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Current user information', style: TextStyle(fontSize: 18)),
+              Text('Device information', style: TextStyle(fontSize: 18)),
               SizedBox(height: 10.0),
-              Text('User name: ${user.name}'),
-              Text('User email: ${user.email}'),
-              Text('Back4App objectID: ${user.objectId}'),
-              Text('Device ID: ${user.deviceId}'),
+              Text('Server address: ${user.serverUrl}'),
+              Text('Server port: ${user.port}'),
+              Text('Device ID: ${user.deviceName}'),
             ],
           )),
     );

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:notify/src/models/message.dart';
-import 'package:notify/src/services/back4app.dart';
+import 'package:notify/src/services/http_service.dart';
+import 'package:notify/src/services/socketio.dart';
+
+// builds view of incoming messages
+// messages are being stroed in Messages singleton instance
+// in propierty - List<NotyMessage> messages
+
+// TODO message delete on long press
 
 class MsgList extends StatefulWidget {
   @override
@@ -9,15 +16,14 @@ class MsgList extends StatefulWidget {
 }
 
 class _MsgListState extends State<MsgList> {
-  Messages _msg = Messages.instance;
-  ParseService _b4a = ParseService();
+  final Messages _msg = Messages.instance;
+  final HttpService _http = HttpService();
+  final SocketIoService _ws = SocketIoService();
 
   @override
   initState() {
     super.initState();
-    print('MsgList initState() activated');
-    // _msg.buildMockList();
-    print(_msg.messages?.length);
+    print("MsgList Widget - Number of messages: ${_msg.messages?.length}");
   }
 
   @override
@@ -62,8 +68,8 @@ class _MsgListState extends State<MsgList> {
           setState(() {
             var id = message.objectId;
             print(id);
-            _msg.deleteMessageLocalyId(id);
-            _b4a.deleteByObjectID('Messages', id);
+            _msg.deleteMessageLocallyById(id);
+            _http.deleteMessage(_ws.url, id);
           });
         }
       },
@@ -110,7 +116,7 @@ class _MsgListState extends State<MsgList> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete meesage!'),
+          title: Text('Delete message!'),
           actions: <Widget>[
             FlatButton(
               child: Text('Cancel'),

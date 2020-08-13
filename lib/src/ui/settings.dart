@@ -14,6 +14,7 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
+  final _ws = SocketIoService();
   final _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
@@ -63,8 +64,14 @@ class _SettingsState extends State<Settings> {
                       final form = _formKey.currentState;
                       form.save();
                       saveConfig(_bloc.selfConfig);
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => InitApp()));
+                      _ws.socket?.emit('disconnect');
+                      print('emitting "disconnect"');
+                      Future.delayed(
+                          Duration(seconds: 1),
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => InitApp())));
                     },
                     child: Text('Apply Changes'))
               ],

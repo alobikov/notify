@@ -21,6 +21,10 @@ class SocketIoService {
   SocketIoService._internal();
 
   void initialize({SelfConfig selfConfig, Messages msg, StreamSink sink}) {
+    if (socket != null) {
+      socket.close();
+      print('Deleting existing socket');
+    }
     this.selfConfig = selfConfig;
     this.msg = msg;
     this.sink = sink;
@@ -30,24 +34,30 @@ class SocketIoService {
     print('SocketIoService._internal() is here!');
     socket = IO.io('http://${this.url}', <String, dynamic>{
       'transports': ['websocket'],
+      'forceNew': true,
+      'timeout': 3000,
     });
     print("Init in socketio.dart: ${socket.opts}");
-    socket.on(
-        'connect', (_) => {socket.emit('new-user', selfConfig.deviceName)});
+    socket.on('connect', (_) {
+      socket.emit('new-user', selfConfig.deviceName);
+      print('emitting "new-user", ${selfConfig.deviceName}');
+//      this.sink.add(NavigateToHomeEvent());
+    });
     socket.on('event', (data) => print(data));
     socket.on('disconnect', (_) => print('disconnect'));
     socket.on('connect_error', (e) {
       print('socket connection error: $e');
+      this.sink.add(SwitchToRegisterEvent());
     });
     socket.on('message', (msg) {
-      print('Message received: $msg');
+      print('socket.on "message" received: $msg');
       print('all messages ${this.msg?.messages}');
 //      Map<String, dynamic> m = jsonDecode(msg);
       NotyMessage notyMessage = NotyMessage(
         body: msg['message'],
         from: msg['from'],
         timestamp: msg['timestamp'].toString(),
-        objectId: '234234',
+        objectId: msg['_id'],
       );
       this.msg.messages.insert(0, notyMessage);
       print(this.msg.messages);
@@ -57,7 +67,7 @@ class SocketIoService {
 
   void emitMessage(msg, to, from) {
     this.socket.emit('send-message', {'message': msg, 'to': to, 'from': from});
-    print('send-message invoked $msg');
+    print('send-message invoked with message: $msg');
   }
 //  socket.on("user-connected", (data) => {print('$data connects to the chat!')});
 //  socket.on('fromServer', (_) => print(_));

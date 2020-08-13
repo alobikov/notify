@@ -6,10 +6,9 @@ import 'package:notify/src/models/addressees.dart';
 import 'package:notify/src/models/error_handler.dart';
 import 'package:notify/src/models/message.dart';
 import 'package:notify/src/models/self_Config.dart';
-import 'package:notify/src/services/back4app.dart';
+import 'package:notify/src/services/http_service.dart';
 import 'package:notify/src/services/socketio.dart';
 import 'package:notify/utils/connection_status.dart';
-import 'package:parse_server_sdk/parse_server_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info/device_info.dart';
 // import 'package:notify/src/services/create_object.dart';
@@ -21,7 +20,6 @@ enum AppState {
   uninitialized,
   authenticated,
   unauthenticated,
-  unknownEDA,
   unregistred,
   sendMessageForm,
   loading,
@@ -43,7 +41,7 @@ enum UIState {
 class RegisterBloc extends ChangeNotifier {
   final _msg = Messages.instance;
   // final _msgToSend = MessageToSend();
-  final _b4a = ParseService();
+  final _http = HttpService();
   final _addressees = Addressees();
   final _errorHandler = ErrorHandler.instance;
   final registerFormFields;
@@ -55,7 +53,7 @@ class RegisterBloc extends ChangeNotifier {
   String emailError;
   bool isOffline = false;
   final selfConfig =
-      SelfConfig(deviceName: "EMUL", serverUrl: '192.168.1.61', port: '3000');
+      SelfConfig(deviceName: "", serverUrl: '192.168.1.60', port: '3000');
 
   StreamSubscription _connectionChangeStream;
 
@@ -103,71 +101,7 @@ class RegisterBloc extends ChangeNotifier {
   void _mapEventController(event) async {
     //***************************************/
     //* Populate Register/Signin form by mock user date
-    if (event is PopulateFormEvent) {
-      print('Populate button event');
-      registerFormFields.setField(RegisterInitFields.getAll);
-      RegisterInitFields.advanceToNextUser();
-      print('RegisterFormFields: ${registerFormFields.show()}');
-      notifyListeners();
-      return;
-      //
-      //***************************************/
-      //* Register User event handler
-    } else if (event is SubmitFormEvent) {
-      _inState.add(AppState.loading);
-      // print('Submitted Register Form ${_registerFormFields.show()}');
-      //* create account at BACK4APP if failed display error in AlertDialog
-      await _b4a.logout(_liveQuery); //! but first make sure user not logged in
-      _liveQuery = null;
-      _msg.clear(); // clear local message repository
-      final error = await _b4a.registerWith(registerFormFields);
-      if (error != null) {
-        // Alert() is common usage UI and it needs additional information
-        // The revert point is one of this
-        // We using ErrorHandler singleton to pass extra information
-        _errorHandler.revertEvent = SwitchToRegisterEvent();
-        _errorHandler.message = error;
-        _inState.add(AppState.error);
-      } else {
-        // read all messages from server to local repository
-        await _initMessageHandler();
-        // subscribe to LiveQuery on 'Messages'
-        _liveQuery ??= await _b4a.initiateLiveQuery(
-            registerFormFields.name, _msg, _regFormEventCtrl.sink,
-            mark: '1');
-        _inState.add(AppState.authenticated); // show Home()
-      }
-      return;
-    } else if (event is SigninFormEvent) {
-      //***************************************/
-      //* SignIn event handler - Signin button pressed
-      print('**********SignInFormEvent ');
-      _inState.add(AppState.loading);
-      _msg.clear(); // clear local message repository
-      var error = await _b4a.loginWith(registerFormFields);
-      if (error != null) {
-        print("Login failed");
-        // Alert() is common usage UI and it needs additional information
-        // The revert point is one of this
-        // We using ErrorHandler singleton to pass extra information
-        _errorHandler.revertEvent = SwitchToSigninEvent();
-        _errorHandler.message = error;
-        _inState.add(AppState.error);
-      } else {
-        // read all messages from server to local repository
-        await _initMessageHandler();
-        // subscribe to LiveQuery on 'Messages'
-        _liveQuery ??= await _b4a.initiateLiveQuery(
-            registerFormFields.name, _msg, _regFormEventCtrl.sink,
-            mark: '2');
-        // and generate event via provided sink
-        _inState.add(AppState.authenticated); // showHome()
-      }
-      return;
-      //
-      //***************************************/
-      //* Navigate to SendMessageForm
-    } else if (event is SendMessageFormEvent) {
+    if (event is SendMessageFormEvent) {
       String deviceid = await DeviceId.getID;
       print('^^^^^^^^^^^^^^^^^^^^^^ DeviceID: $deviceid');
       // await _b4a.getAllUsers();
@@ -178,8 +112,6 @@ class RegisterBloc extends ChangeNotifier {
       //* SignOut event handler
     } else if (event is UserLogoutEvent) {
       _inState.add(AppState.loading);
-      await _b4a.logout(_liveQuery); // liveQUery must be unsubscribed
-      _liveQuery = null;
       initData(); // show Signin()
       return;
 
@@ -212,15 +144,6 @@ class RegisterBloc extends ChangeNotifier {
       //**************************************/
       //* Return to Home Screen event handling
     } else if (event is NavigateToHomeEvent) {
-      print('@@@@@@@@@@@@@@@ NavigateToHomeEvent Handler @@@@@@@@@@@@@@@@@@');
-      if (_b4a.isEda) {
-        // iniation of EDA60K user environment takes place here
-        _msg.clear(); // clear local message repository
-        await _initMessageHandler();
-        _liveQuery ??= await _b4a.initiateLiveQuery(
-            registerFormFields.name, _msg, _regFormEventCtrl.sink,
-            mark: '3');
-      }
       _inState.add(AppState.authenticated);
     }
     return;
@@ -237,32 +160,28 @@ class RegisterBloc extends ChangeNotifier {
     print('Running on ${androidInfo.model}');
     if (androidInfo.model != 'EDA60K') {
       print("THIS PROGRAM MUST BE RUN ON EDA60K SCANNER");
-      // TODO - route to nohere
+      // TODO - route to nowhere
     }
 
     // is it first launch of application?
     final prefs = await SharedPreferences.getInstance();
     print('initData() deviceName ${prefs.getString("deviceName")}');
     selfConfig
-      ..deviceName = prefs.getString('deviceName') ?? 'EMUL'
-      ..serverUrl = prefs.getString('serverUrl') ?? '192.168.1.60'
+      ..deviceName = prefs.getString('deviceName') ?? ''
+      ..serverUrl = prefs.getString('serverUrl') ?? '192.168.0.14'
       ..port = prefs.getString('port') ?? '3000';
 
-    if (selfConfig.deviceName == 'EMUL') {
+    if (selfConfig.deviceName == '') {
       _inState.add(AppState.firstlaunch);
       print("First Launch!!!!!!!!!!!!!!!!!!!!!!!!");
-    } else {
-      _inState.add(AppState.authenticated);
+      return;
     }
-    return;
-  }
-
-  initDataContinue() async {
+    // continue initialization if device confiugured
     final ws = SocketIoService();
     ws.initialize(
         selfConfig: selfConfig, msg: _msg, sink: _regFormEventCtrl.sink);
-
-    // ! initializing of LocalNotification service
+    print('After ws.initialize()');
+    //* initializing of LocalNotification service
     var initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     var initializationSettingsIOS = IOSInitializationSettings();
@@ -274,42 +193,43 @@ class RegisterBloc extends ChangeNotifier {
         initializationSettings,
         onSelectNotification: onSelectNotification);
 
-    //! initializing Back4App service
-    await Future.delayed(Duration(seconds: 1));
-    await _b4a.initParse();
+    //* initializing Back4App service
+    // await Future.delayed(Duration(seconds: 1));
+    // await _b4a.initParse();
 
     // initialize connection status watch dog
     // external library
     // used to handle internet connection status change
     connectionStatus.initialize();
 
-    //! check for user status on Back4App
-    var result = await _b4a.isLogged();
-    if (result != null) {
-      print('---------------------$result');
-      //* initialize RegisterFormFields since user is active in b4a
-      registerFormFields.setField(result);
-      // if (!_b4a.isEda) {
-      //* read from server all messages addressed for this user
-      await _initMessageHandler();
-      //* built list of contacts
-      await _b4a.getAddressees(_addressees);
-
-      _inState.add(AppState.authenticated);
-    } else {
-      if (_b4a.isEda)
-        _inState.add(AppState.unknownEDA);
-      //* otherwise go for full blown authentication
-      else
-        _inState.add(AppState.unauthenticated);
-    }
+    //* check for user status on Back4App
+    // var result = await _b4a.isLogged();
+    // if (result != null) {
+    //   print('---------------------$result');
+    //   // initialize RegisterFormFields since user is active in b4a
+    //   registerFormFields.setField(result);
+    //   // if (!_b4a.isEda) {
+    //* read from server all messages addressed for this user
+    await _initMessageHandler();
+    print('after message handler');
+    event.add(NavigateToHomeEvent());
+    //* built list of contacts
+//    await _b4a.getAddressees(_addressees);
     return;
   }
 
   Future _initMessageHandler() async {
     print('InitMessageHandler()');
-    await _b4a.readMessages(_msg,
-        registerFormFields.name); // read all Messages from server for selfuser
+    try {
+      await _http.retrieveUserMessages(
+        _msg,
+        selfConfig.serverUrl + ':' + selfConfig.port,
+        selfConfig.deviceName,
+      );
+    } catch (e) {
+      print('can not read messages');
+    }
+
     print('Message read completed');
     return null;
   }
@@ -340,20 +260,9 @@ class RegisterBloc extends ChangeNotifier {
     if (!isOffline) {
       print('*****connection restored******');
       print(uiState);
-      // reset app for proper initialization of LiveQuery with delay
-      await Future.delayed(Duration(seconds: 3));
-      _liveQuery ??= await _b4a.initiateLiveQuery(
-          registerFormFields.name, _msg, _regFormEventCtrl.sink,
-          mark: '5');
-      // _inState.add(AppState.reset);
-      // initData();
     } else {
       print('@@@@@@@@@ Inetrnet lost @@@@@@@@@');
-      // _liveQuery = null;
       print(uiState);
-      // _errorHandler.revertEvent = null;
-      // _errorHandler.message = "Network connection lost, service not availible!";
-      // _inState.add(AppState.error);
     }
   }
 
