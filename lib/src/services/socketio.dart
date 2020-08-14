@@ -51,13 +51,13 @@ class SocketIoService {
     });
     socket.on('message', (msg) {
       print('socket.on "message" received: $msg');
-      print('all messages ${this.msg?.messages}');
+      print('currently user have following messages ${this.msg?.messages}');
 //      Map<String, dynamic> m = jsonDecode(msg);
       NotyMessage notyMessage = NotyMessage(
         body: msg['message'],
         from: msg['from'],
         timestamp: msg['timestamp'].toString(),
-        objectId: msg['_id'],
+        objectId: msg['_id'].toString(),
       );
       this.msg.messages.insert(0, notyMessage);
       print(this.msg.messages);

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:device_id/device_id.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notify/src/models/addressees.dart';
 import 'package:notify/src/models/error_handler.dart';
@@ -53,7 +54,7 @@ class RegisterBloc extends ChangeNotifier {
   String emailError;
   bool isOffline = false;
   final selfConfig =
-      SelfConfig(deviceName: "", serverUrl: '192.168.1.60', port: '3000');
+      SelfConfig(deviceName: "", serverUrl: '192.168.0.14', port: '3000');
 
   StreamSubscription _connectionChangeStream;
 
@@ -136,7 +137,25 @@ class RegisterBloc extends ChangeNotifier {
     } else if (event is NewMessage) {
       //!  duplicated
       print('RegisterBloc: New message event');
-      String title = 'From: ${event.msg.from} @ ${event.msg.timestamp}';
+      // format Time and Date
+      String msgDate, msgTime;
+      final val = int.tryParse(event.msg.timestamp);
+      if (val == null) {
+        // if timestamp not converts to int then check timestamp to be in old style
+        if (event.msg.timestamp.contains(" ")) {
+          // old style timestamp - formatted date and time string
+          msgDate = event.msg.timestamp;
+          msgTime = '';
+        } else {
+          msgDate = 'No Date';
+          msgTime = '';
+        }
+      } else {
+        final timeStamp = new DateTime.fromMillisecondsSinceEpoch(val);
+        msgDate = DateFormat('yyyy-MM-dd').format(timeStamp);
+        msgTime = DateFormat.Hm().format(timeStamp);
+      }
+      String title = 'From: ${event.msg.from} @ $msgDate $msgTime';
       await _showNotification(title, event.msg.body);
       _inState.add(AppState.authenticated); // redraw Home() with new message
       return;

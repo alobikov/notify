@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:notify/src/models/message.dart';
 import 'package:notify/src/services/http_service.dart';
@@ -23,12 +25,26 @@ class _MsgListState extends State<MsgList> {
   @override
   initState() {
     super.initState();
-    print("MsgList Widget - Number of messages: ${_msg.messages?.length}");
   }
 
   @override
   Widget build(BuildContext context) {
     // final brews = Provider.of<List<Brew>>(context) ?? [];
+    int msgCount = _msg.messages?.length;
+    print("MsgList Widget - Number of messages: $msgCount");
+    if (msgCount == 0) {
+      return Container(
+          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('You have no messages',
+                  style: TextStyle(
+                    fontSize: 22.0,
+                  )),
+            ],
+          ));
+    }
 
     return ListView.separated(
         separatorBuilder: (context, index) => Divider(
@@ -67,7 +83,7 @@ class _MsgListState extends State<MsgList> {
         if (action) {
           setState(() {
             var id = message.objectId;
-            print(id);
+            print("Removing message with ID: $id");
             _msg.deleteMessageLocallyById(id);
             _http.deleteMessage(_ws.url, id);
           });

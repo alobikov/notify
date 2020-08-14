@@ -15,7 +15,7 @@ import 'package:provider/provider.dart';
 // corresponding backend located at
 // C:\Users\Aleks\development\notify\backend\server
 
-const String CURRENT_RELEASE = '2.1.1';
+const String CURRENT_RELEASE = '2.3.2';
 
 void main() async {
   runApp(
